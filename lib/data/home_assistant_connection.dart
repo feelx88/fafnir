@@ -24,7 +24,7 @@ class HomeAssistantConnection {
 
   @override
   String toString() {
-    return jsonEncode({'name': name, 'token': token});
+    return jsonEncode({'name': name, 'url': url, 'token': token});
   }
 
   static Future<void> toPrefs(SharedPreferences prefs, String key,

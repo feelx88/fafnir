@@ -30,7 +30,7 @@ dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.0.9
-  rest_client: ^2.0.1+4
+  http: ^0.13.4
   flutter_barcode_scanner: ^2.0.0
   flutter_windowmanager: ^0.2.0
 

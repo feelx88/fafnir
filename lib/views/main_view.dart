@@ -1,6 +1,7 @@
 import 'package:fafnir/constants.dart';
 import 'package:fafnir/dialogs/add_connection_dialog.dart';
 import 'package:fafnir/dialogs/confirm_dialog.dart';
+import 'package:fafnir/views/select_entity_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,7 +17,7 @@ class MainView extends StatefulWidget {
 }
 
 class _MainViewState extends State<MainView> {
-  late List<HomeAssistantConnection> _homeAssistantConnections;
+  List<HomeAssistantConnection>? _homeAssistantConnections;
 
   _MainViewState() {
     SharedPreferences.getInstance().then((prefs) {
@@ -69,7 +70,10 @@ class _MainViewState extends State<MainView> {
     );
   }
 
-  void _addEntity() {}
+  void _addEntity() async {
+    await Navigator.of(context).pushNamed('/select_entity',
+        arguments: SelectEntityViewArguments(_homeAssistantConnections!.first));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +96,7 @@ class _MainViewState extends State<MainView> {
             onTap: _addConnection,
           ),
           const Divider(),
-          ...(_homeAssistantConnections
+          ...(_homeAssistantConnections!
               .map((connection) => ListTile(
                     title: Text(connection.name),
                     trailing: IconButton(
@@ -104,20 +108,20 @@ class _MainViewState extends State<MainView> {
               .toList())
         ]),
       ),
-      body: _homeAssistantConnections.isEmpty ||
-              _homeAssistantConnections.first.entities == null
+      body: _homeAssistantConnections!.isEmpty ||
+              _homeAssistantConnections!.first.entities == null
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _homeAssistantConnections.isEmpty
+                  _homeAssistantConnections!.isEmpty
                       ? const Text('No connections configured')
                       : const Text('No entities configured')
                 ],
               ),
             )
           : const SizedBox.shrink(),
-      floatingActionButton: _homeAssistantConnections.isNotEmpty
+      floatingActionButton: _homeAssistantConnections!.isNotEmpty
           ? FloatingActionButton(
               onPressed: _addEntity,
               child: const Icon(Icons.add),

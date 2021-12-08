@@ -4,8 +4,8 @@ import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 
 import 'fafnir_app.dart';
 
-void main() {
+void main() async {
   runApp(const Fafnir());
-  FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SHOW_WHEN_LOCKED)
-      .then((e) {});
+  await FlutterWindowManager.addFlags(
+      FlutterWindowManager.FLAG_SHOW_WHEN_LOCKED);
 }

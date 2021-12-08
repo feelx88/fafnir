@@ -29,7 +29,8 @@ class HomeAssistantConnection {
 
   static Future<void> toPrefs(SharedPreferences prefs, String key,
       List<HomeAssistantConnection> connections) async {
-    List<String> list = connections.map((e) => e.toString()).toList();
+    List<String> list =
+        connections.map((connection) => connection.toString()).toList();
     await prefs.setStringList(key, list);
   }
 
@@ -37,7 +38,8 @@ class HomeAssistantConnection {
       SharedPreferences prefs, String key) {
     return prefs
             .getStringList(key)
-            ?.map((e) => HomeAssistantConnection.fromString(e))
+            ?.map((connectionJson) =>
+                HomeAssistantConnection.fromString(connectionJson))
             .toList(growable: true) ??
         List.empty(growable: true);
   }

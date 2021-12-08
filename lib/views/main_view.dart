@@ -52,7 +52,8 @@ class _MainViewState extends State<MainView> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       List<HomeAssistantConnection> connections =
           HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
-      connections.removeWhere((e) => e.name == connection.name);
+      connections.removeWhere(
+          (connectionToCheck) => connectionToCheck.name == connection.name);
       HomeAssistantConnection.toPrefs(prefs, homeAssistantUrlsKey, connections);
       setState(() {
         _homeAssistantConnections = connections;
@@ -60,6 +61,8 @@ class _MainViewState extends State<MainView> {
       });
     });
   }
+
+  void _addEntity() {}
 
   @override
   Widget build(BuildContext context) {
@@ -83,12 +86,12 @@ class _MainViewState extends State<MainView> {
             onTap: _addConnection,
           ),
           ...(_homeAssistantConnections
-              .map((e) => ListTile(
-                    title: Text(e.name),
+              .map((connection) => ListTile(
+                    title: Text(connection.name),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
                       color: Colors.red,
-                      onPressed: () => _deleteConnection(e),
+                      onPressed: () => _deleteConnection(connection),
                     ),
                   ))
               .toList())
@@ -97,16 +100,25 @@ class _MainViewState extends State<MainView> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            _homeAssistantConnections.isEmpty ||
-                    _homeAssistantConnections.first.entities == null
-                ? const Text('Do iss nix!')
-                : const Text(
-                    'Do iss ebbes',
-                  )
-          ],
+          children: _homeAssistantConnections.isEmpty
+              ? <Widget>[
+                  _homeAssistantConnections.isEmpty
+                      ? const Text('No connections configured')
+                      : const SizedBox.shrink(),
+                ]
+              : <Widget>[
+                  _homeAssistantConnections.first.entities == null
+                      ? const Text('No entities configured')
+                      : const SizedBox.shrink(),
+                ],
         ),
       ),
+      floatingActionButton: _homeAssistantConnections.isNotEmpty
+          ? FloatingActionButton(
+              onPressed: _addEntity,
+              child: const Icon(Icons.add),
+            )
+          : const SizedBox.shrink(),
     );
   }
 }

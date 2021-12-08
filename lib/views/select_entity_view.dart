@@ -18,8 +18,15 @@ class SelectEntityViewArguments {
   SelectEntityViewArguments(this.connection);
 }
 
+class HomeAssistantEntity {
+  final String friendlyName;
+  final String entityId;
+
+  HomeAssistantEntity(this.friendlyName, this.entityId);
+}
+
 class _SelectEntityViewState extends State<SelectEntityView> {
-  List<dynamic>? _entities;
+  List<HomeAssistantEntity>? _entities;
   bool _searching = false;
   String _filter = '';
 
@@ -33,17 +40,19 @@ class _SelectEntityViewState extends State<SelectEntityView> {
       'Authorization': 'Bearer ${args.connection.token}'
     }).then((data) {
       setState(() {
-        _entities = jsonDecode(data.body);
+        _entities = (jsonDecode(data.body) as List<dynamic>)
+            .map((entry) => HomeAssistantEntity(
+                entry['friendly_name'] ?? entry['entity_id'] ?? '',
+                entry['entity_id'] ?? ''))
+            .toList();
       });
     });
   }
 
-  bool _filterFn(element) {
+  bool _filterFn(HomeAssistantEntity entity) {
     return _filter == '' ||
-        (element['entity_id'] ?? '')
-            .contains(RegExp(_filter, caseSensitive: false)) ||
-        (element['attributes']['friendly_name'] ?? '')
-            .contains(RegExp(_filter, caseSensitive: false));
+        (entity.entityId).contains(RegExp(_filter, caseSensitive: false)) ||
+        (entity.friendlyName).contains(RegExp(_filter, caseSensitive: false));
   }
 
   void _toggleFilter() {
@@ -81,10 +90,9 @@ class _SelectEntityViewState extends State<SelectEntityView> {
             ? ListView(
                 children: _entities!
                     .where((element) => _filterFn(element))
-                    .map((entity) => ListTile(
-                          title: Text(entity['attributes']['friendly_name'] ??
-                              entity['entity_id']),
-                          subtitle: Text(entity['entity_id']),
+                    .map((HomeAssistantEntity entity) => ListTile(
+                          title: Text(entity.friendlyName),
+                          subtitle: Text(entity.entityId),
                         ))
                     .toList())
             : const Center(child: CircularProgressIndicator(value: null)));

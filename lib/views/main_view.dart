@@ -1,7 +1,7 @@
 import 'package:fafnir/constants.dart';
+import 'package:fafnir/dialogs/add_connection_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/home_assistant_connection.dart';
@@ -15,7 +15,6 @@ class MainView extends StatefulWidget {
 }
 
 class _MainViewState extends State<MainView> {
-  String? _result;
   late List<HomeAssistantConnection> _homeAssistantConnections;
 
   _MainViewState() {
@@ -27,66 +26,22 @@ class _MainViewState extends State<MainView> {
     });
   }
 
-  Future<void> _scanToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String value = await FlutterBarcodeScanner.scanBarcode(
-        '#${Colors.red.value.toRadixString(16)}', 'Cancel', true, ScanMode.QR);
-    String? name, url;
+  void _addConnection([String? name, String? url, String? token]) async {
+    AddConnectionDialog.create(context, name, url, token,
+        (name, url, token) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if (value == '-1') {
-      await showDialog(
-          context: context,
-          builder: (BuildContext context) => AlertDialog(
-                title: const Text('Scan failed'),
-                actions: [
-                  TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Ok'))
-                ],
-              ));
-      return;
-    }
+      List<HomeAssistantConnection> connections =
+          HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
+      connections
+          .add(HomeAssistantConnection(name: name!, url: url!, token: token!));
+      HomeAssistantConnection.toPrefs(prefs, homeAssistantUrlsKey, connections);
 
-    await showDialog(
-        context: context,
-        builder: (BuildContext context) => AlertDialog(
-              title: const Text('Enter Name for the new connection'),
-              content: Column(mainAxisSize: MainAxisSize.min, children: [
-                TextField(
-                  decoration: const InputDecoration(label: Text('Name')),
-                  onChanged: (value) => name = value,
-                ),
-                TextField(
-                  decoration: const InputDecoration(label: Text('Url')),
-                  onChanged: (value) => url = value,
-                )
-              ]),
-              actions: [
-                TextButton(
-                    onPressed: () {
-                      name = null;
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Cancel')),
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Save')),
-              ],
-            ));
+      setState(() {
+        _homeAssistantConnections = connections;
+      });
 
-    if (name == null || url == null) {
-      return;
-    }
-
-    List<HomeAssistantConnection> connections =
-        HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
-    connections
-        .add(HomeAssistantConnection(name: name!, url: url!, token: value));
-    HomeAssistantConnection.toPrefs(prefs, homeAssistantUrlsKey, connections);
-
-    setState(() {
-      _result = value;
-      _homeAssistantConnections = connections;
+      Navigator.pop(context);
     });
   }
 
@@ -100,6 +55,12 @@ class _MainViewState extends State<MainView> {
                 ),
                 content: Text('Really delete connection ${connection.name}?'),
                 actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                    ),
+                  ),
                   TextButton(
                     onPressed: () async {
                       SharedPreferences prefs =
@@ -119,12 +80,6 @@ class _MainViewState extends State<MainView> {
                       'Delete',
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                    ),
-                  )
                 ],
               );
             }) ??
@@ -150,7 +105,7 @@ class _MainViewState extends State<MainView> {
           ListTile(
             leading: const Icon(Icons.add),
             title: const Text('Add Home Assistant connection'),
-            onTap: _scanToken,
+            onTap: _addConnection,
           ),
           ...(_homeAssistantConnections
               .map((e) => ListTile(

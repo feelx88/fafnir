@@ -39,6 +39,6 @@ class HomeAssistantConnection {
             .getStringList(key)
             ?.map((e) => HomeAssistantConnection.fromString(e))
             .toList(growable: true) ??
-        List.empty();
+        List.empty(growable: true);
   }
 }

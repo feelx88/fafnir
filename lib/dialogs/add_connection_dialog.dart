@@ -45,7 +45,7 @@ class AddConnectionDialog {
                     Navigator.pop(context);
                   },
                 ),
-                TextButton(
+                ElevatedButton(
                   child: const Text('Save'),
                   onPressed: () => saveCallback(name, url, token),
                 )

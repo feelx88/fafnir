@@ -10,6 +10,10 @@ class Fafnir extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: appName,
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.blueGrey,
+      ),
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
       ),

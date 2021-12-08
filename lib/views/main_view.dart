@@ -46,20 +46,27 @@ class _MainViewState extends State<MainView> {
     });
   }
 
-  Future<void> _deleteConnection(HomeAssistantConnection connection) async {
-    ConfirmDialog.create(context, 'Delete connection',
-        'Really delete connection ${connection.name}?', 'Delete', () async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<HomeAssistantConnection> connections =
-          HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
-      connections.removeWhere(
-          (connectionToCheck) => connectionToCheck.name == connection.name);
-      HomeAssistantConnection.toPrefs(prefs, homeAssistantUrlsKey, connections);
-      setState(() {
-        _homeAssistantConnections = connections;
-        Navigator.pop(context);
-      });
-    });
+  void _deleteConnection(HomeAssistantConnection connection) async {
+    ConfirmDialog.create(
+      context,
+      'Delete connection',
+      'Really delete connection ${connection.name}?',
+      'Delete',
+      () async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        List<HomeAssistantConnection> connections =
+            HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
+        connections.removeWhere(
+            (connectionToCheck) => connectionToCheck.name == connection.name);
+        HomeAssistantConnection.toPrefs(
+            prefs, homeAssistantUrlsKey, connections);
+        setState(() {
+          _homeAssistantConnections = connections;
+          Navigator.pop(context);
+        });
+      },
+      positiveButtonColor: Theme.of(context).errorColor,
+    );
   }
 
   void _addEntity() {}
@@ -81,10 +88,10 @@ class _MainViewState extends State<MainView> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.add),
             title: const Text('Add Home Assistant connection'),
             onTap: _addConnection,
           ),
+          const Divider(),
           ...(_homeAssistantConnections
               .map((connection) => ListTile(
                     title: Text(connection.name),
@@ -97,22 +104,19 @@ class _MainViewState extends State<MainView> {
               .toList())
         ]),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: _homeAssistantConnections.isEmpty
-              ? <Widget>[
+      body: _homeAssistantConnections.isEmpty ||
+              _homeAssistantConnections.first.entities == null
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                   _homeAssistantConnections.isEmpty
                       ? const Text('No connections configured')
-                      : const SizedBox.shrink(),
-                ]
-              : <Widget>[
-                  _homeAssistantConnections.first.entities == null
-                      ? const Text('No entities configured')
-                      : const SizedBox.shrink(),
+                      : const Text('No entities configured')
                 ],
-        ),
-      ),
+              ),
+            )
+          : const SizedBox.shrink(),
       floatingActionButton: _homeAssistantConnections.isNotEmpty
           ? FloatingActionButton(
               onPressed: _addEntity,

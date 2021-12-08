@@ -1,5 +1,6 @@
 import 'package:fafnir/constants.dart';
 import 'package:fafnir/dialogs/add_connection_dialog.dart';
+import 'package:fafnir/dialogs/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,44 +47,18 @@ class _MainViewState extends State<MainView> {
   }
 
   Future<void> _deleteConnection(HomeAssistantConnection connection) async {
-    if (await showDialog<bool>(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text(
-                  'Delete connection',
-                ),
-                content: Text('Really delete connection ${connection.name}?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      SharedPreferences prefs =
-                          await SharedPreferences.getInstance();
-                      List<HomeAssistantConnection> connections =
-                          HomeAssistantConnection.fromPrefs(
-                              prefs, homeAssistantUrlsKey);
-                      connections.removeWhere((e) => e.name == connection.name);
-                      HomeAssistantConnection.toPrefs(
-                          prefs, homeAssistantUrlsKey, connections);
-                      setState(() {
-                        _homeAssistantConnections = connections;
-                        Navigator.pop(context);
-                      });
-                    },
-                    child: const Text(
-                      'Delete',
-                    ),
-                  ),
-                ],
-              );
-            }) ??
-        false) {}
+    ConfirmDialog.create(context, 'Delete connection',
+        'Really delete connection ${connection.name}?', 'Delete', () async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<HomeAssistantConnection> connections =
+          HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
+      connections.removeWhere((e) => e.name == connection.name);
+      HomeAssistantConnection.toPrefs(prefs, homeAssistantUrlsKey, connections);
+      setState(() {
+        _homeAssistantConnections = connections;
+        Navigator.pop(context);
+      });
+    });
   }
 
   @override

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:fafnir/data/home_assistant_connection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
 
 class SelectEntityView extends StatefulWidget {
@@ -68,14 +69,27 @@ class _SelectEntityViewState extends State<SelectEntityView> {
         appBar: AppBar(
           leading: _searching
               ? IconButton(
-                  onPressed: _toggleFilter, icon: Icon(Icons.arrow_back))
+                  onPressed: _toggleFilter, icon: const Icon(Icons.arrow_back))
               : null,
           title: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 500),
+            layoutBuilder: (currentChild, previousChildren) => Stack(
+              children: [currentChild!, ...previousChildren],
+              alignment: Alignment.centerLeft,
+            ),
+            duration: kThemeAnimationDuration,
             child: _searching
                 ? TextField(
                     autofocus: true,
-                    decoration: const InputDecoration(label: Text('Filter')),
+                    maxLines: 1,
+                    textAlignVertical: TextAlignVertical.center,
+                    decoration: InputDecoration(
+                        hintText: 'Filter',
+                        border: InputBorder.none,
+                        suffixIcon: IconButton(
+                            onPressed: () => setState(() {
+                                  _filter = '';
+                                }),
+                            icon: const Icon(Icons.clear))),
                     controller:
                         _filter == '' ? TextEditingController(text: '') : null,
                     onChanged: (value) => setState(() {
@@ -84,16 +98,12 @@ class _SelectEntityViewState extends State<SelectEntityView> {
                   )
                 : Text(widget.title),
           ),
-          actions: [
-            _searching
-                ? IconButton(
-                    onPressed: () => setState(() {
-                          _filter = '';
-                        }),
-                    icon: const Icon(Icons.clear))
-                : IconButton(
-                    onPressed: _toggleFilter, icon: const Icon(Icons.search))
-          ],
+          actions: _searching
+              ? []
+              : [
+                  IconButton(
+                      onPressed: _toggleFilter, icon: const Icon(Icons.search))
+                ],
         ),
         body: _entities != null
             ? ListView(

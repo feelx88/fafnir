@@ -22,6 +22,7 @@ class MainView extends StatefulWidget {
 
 class _MainViewState extends State<MainView> {
   List<HomeAssistantConnection> _homeAssistantConnections = List.empty();
+  int _selection = 0;
 
   @override
   void didChangeDependencies() async {
@@ -31,6 +32,7 @@ class _MainViewState extends State<MainView> {
     setState(() {
       _homeAssistantConnections =
           HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
+      _selection = (prefs.getString(selectedHomeAssistantIndex) ?? '0') as int;
     });
   }
 
@@ -74,15 +76,18 @@ class _MainViewState extends State<MainView> {
 
   void _addEntity() async {
     var result = await Navigator.of(context).pushNamed('/select_entity',
-        arguments: SelectEntityViewArguments(_homeAssistantConnections.first));
+        arguments: SelectEntityViewArguments(
+            _homeAssistantConnections.elementAt(_selection)));
 
     if (result == null) {
       return;
     }
 
     setState(() {
-      _homeAssistantConnections.first.entities
-          ?.add(result as HomeAssistantEntity);
+      _homeAssistantConnections
+          .elementAt(_selection)
+          .entities
+          .add(result as HomeAssistantEntity);
     });
 
     _save();
@@ -92,7 +97,7 @@ class _MainViewState extends State<MainView> {
     ConfirmDialog.create(context, 'Remove entity',
         'Do you want to remove entity ${entity.friendlyName}?', 'Remove', () {
       setState(() {
-        _homeAssistantConnections.first.entities?.remove(entity);
+        _homeAssistantConnections.elementAt(_selection).entities.remove(entity);
         Navigator.pop(context);
       });
 
@@ -101,7 +106,7 @@ class _MainViewState extends State<MainView> {
   }
 
   void _toggleEntity(HomeAssistantEntity entity) async {
-    String domain = entity.entityId.split('.').first;
+    String domain = entity.entityId.split('.').elementAt(_selection);
     late String service;
 
     switch (domain) {
@@ -119,9 +124,10 @@ class _MainViewState extends State<MainView> {
 
     await Client().post(
         Uri.parse(
-            '${_homeAssistantConnections.first.url}/api/services/$service'),
+            '${_homeAssistantConnections.elementAt(_selection).url}/api/services/$service'),
         headers: {
-          'Authorization': 'Bearer ${_homeAssistantConnections.first.token}'
+          'Authorization':
+              'Bearer ${_homeAssistantConnections.elementAt(_selection).token}'
         },
         body: jsonEncode({'entity_id': entity.entityId}));
   }
@@ -148,19 +154,38 @@ class _MainViewState extends State<MainView> {
           ),
           const Divider(),
           ...(_homeAssistantConnections
-              .map((connection) => ListTile(
+              .asMap()
+              .map((index, connection) => MapEntry(
+                  index,
+                  ListTile(
                     title: Text(connection.name),
+                    onTap: () {
+                      setState(() {
+                        _selection = index;
+                      });
+                    },
+                    leading: Checkbox(
+                      value: _selection == index,
+                      onChanged: (value) {
+                        if (value!) {
+                          setState(() {
+                            _selection = index;
+                          });
+                        }
+                      },
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
                       color: Colors.red,
                       onPressed: () => _deleteConnection(connection),
                     ),
-                  ))
+                  )))
+              .values
               .toList())
         ]),
       ),
       body: _homeAssistantConnections.isEmpty ||
-              _homeAssistantConnections.first.entities == null
+              _homeAssistantConnections.elementAt(_selection).entities.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -172,7 +197,9 @@ class _MainViewState extends State<MainView> {
               ),
             )
           : ListView(
-              children: _homeAssistantConnections.first.entities!
+              children: _homeAssistantConnections
+                  .elementAt(_selection)
+                  .entities
                   .map((entity) => ListTile(
                         title: Text(entity.friendlyName),
                         subtitle: Text(entity.entityId),

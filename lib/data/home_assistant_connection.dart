@@ -8,20 +8,18 @@ class HomeAssistantConnection extends LinkedListEntry<HomeAssistantConnection> {
   late String name;
   late String token;
   late String url;
-  late HomeAssistantEntityList? entities;
+  late HomeAssistantEntityList entities;
 
   HomeAssistantConnection(
       {required this.name,
       required this.token,
       required this.url,
-      this.entities});
+      HomeAssistantEntityList? entities}) {
+    this.entities = entities ?? HomeAssistantEntityList.fromJson([]);
+  }
 
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'token': token,
-        'url': url,
-        'entities': entities?.toJson()
-      };
+  Map<String, dynamic> toJson() =>
+      {'name': name, 'token': token, 'url': url, 'entities': entities.toJson()};
 
   HomeAssistantConnection.fromJson(Map<String, dynamic> json)
       : name = json['name'] ?? '',

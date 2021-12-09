@@ -19,7 +19,7 @@ class Fafnir extends StatelessWidget {
         primarySwatch: Colors.blueGrey,
       ),
       home: const MainView(title: appName),
-      routes: Routes.create(title: appName),
+      routes: Routes.create(),
     );
   }
 }

@@ -88,6 +88,16 @@ class _MainViewState extends State<MainView> {
     });
   }
 
+  void _removeEntity(HomeAssistantEntity entity) {
+    ConfirmDialog.create(context, 'Remove entity',
+        'Do you want to remove entity ${entity.friendlyName}?', 'Remove', () {
+      setState(() {
+        _homeAssistantConnections?.first.entities?.remove(entity);
+        Navigator.pop(context);
+      });
+    }, positiveButtonColor: Theme.of(context).errorColor);
+  }
+
   void _toggleEntity(HomeAssistantEntity entity) async {
     String domain = entity.entityId.split('.').first;
     await Client().post(
@@ -150,6 +160,7 @@ class _MainViewState extends State<MainView> {
                         title: Text(entity.friendlyName),
                         subtitle: Text(entity.entityId),
                         onTap: () => _toggleEntity(entity),
+                        onLongPress: () => _removeEntity(entity),
                       ))
                   .toList(),
             ),

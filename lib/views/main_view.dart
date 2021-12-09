@@ -32,43 +32,39 @@ class _MainViewState extends State<MainView> {
     });
   }
 
-  void _addConnection([String? name, String? url, String? token]) async {
-    AddConnectionDialog.create(context, name, url, token,
-        (name, url, token) async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+  void _save() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    HomeAssistantConnection.toPrefs(
+        prefs, homeAssistantUrlsKey, _homeAssistantConnections!);
+  }
 
-      List<HomeAssistantConnection> connections =
-          HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
-      connections
-          .add(HomeAssistantConnection(name: name!, url: url!, token: token!));
-      HomeAssistantConnection.toPrefs(prefs, homeAssistantUrlsKey, connections);
-
+  void _addConnection([String? name, String? url, String? token]) {
+    AddConnectionDialog.create(context, name, url, token, (name, url, token) {
       setState(() {
-        _homeAssistantConnections = connections;
+        _homeAssistantConnections!.add(
+            HomeAssistantConnection(name: name!, url: url!, token: token!));
       });
+
+      _save();
 
       Navigator.pop(context);
     });
   }
 
-  void _deleteConnection(HomeAssistantConnection connection) async {
+  void _deleteConnection(HomeAssistantConnection connection) {
     ConfirmDialog.create(
       context,
       'Delete connection',
       'Really delete connection ${connection.name}?',
       'Delete',
-      () async {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        List<HomeAssistantConnection> connections =
-            HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
-        connections.removeWhere(
-            (connectionToCheck) => connectionToCheck.name == connection.name);
-        HomeAssistantConnection.toPrefs(
-            prefs, homeAssistantUrlsKey, connections);
+      () {
         setState(() {
-          _homeAssistantConnections = connections;
+          _homeAssistantConnections!.removeWhere(
+              (connectionToCheck) => connectionToCheck.name == connection.name);
           Navigator.pop(context);
         });
+
+        _save();
       },
       positiveButtonColor: Theme.of(context).errorColor,
     );
@@ -86,6 +82,8 @@ class _MainViewState extends State<MainView> {
       _homeAssistantConnections?.first.entities
           ?.add(result as HomeAssistantEntity);
     });
+
+    _save();
   }
 
   void _removeEntity(HomeAssistantEntity entity) {
@@ -95,6 +93,8 @@ class _MainViewState extends State<MainView> {
         _homeAssistantConnections?.first.entities?.remove(entity);
         Navigator.pop(context);
       });
+
+      _save();
     }, positiveButtonColor: Theme.of(context).errorColor);
   }
 

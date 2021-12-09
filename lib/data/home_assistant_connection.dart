@@ -1,12 +1,14 @@
+import 'dart:collection';
 import 'dart:convert';
 
+import 'package:fafnir/data/home_assistant_entity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class HomeAssistantConnection {
+class HomeAssistantConnection extends LinkedListEntry<HomeAssistantConnection> {
   late String name;
   late String token;
   late String url;
-  late List<String>? entities;
+  late HomeAssistantEntityList? entities;
 
   HomeAssistantConnection(
       {required this.name,
@@ -14,23 +16,24 @@ class HomeAssistantConnection {
       required this.url,
       this.entities});
 
-  HomeAssistantConnection.fromString(String jsonContent) {
-    var json = jsonDecode(jsonContent);
-    name = json['name'] ?? '';
-    token = json['token'] ?? '';
-    url = json['url'] ?? '';
-    entities = json['entities'] ?? List<String>.empty(growable: true);
-  }
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'token': token,
+        'url': url,
+        'entities': entities?.toJson()
+      };
 
-  @override
-  String toString() {
-    return jsonEncode({'name': name, 'url': url, 'token': token});
-  }
+  HomeAssistantConnection.fromJson(Map<String, dynamic> json)
+      : name = json['name'] ?? '',
+        token = json['token'] ?? '',
+        url = json['url'] ?? '',
+        entities = HomeAssistantEntityList.fromJson(json['entities'] ?? []);
 
   static Future<void> toPrefs(SharedPreferences prefs, String key,
       List<HomeAssistantConnection> connections) async {
-    List<String> list =
-        connections.map((connection) => connection.toString()).toList();
+    List<String> list = connections
+        .map((connection) => jsonEncode(connection.toJson()))
+        .toList();
     await prefs.setStringList(key, list);
   }
 
@@ -39,8 +42,18 @@ class HomeAssistantConnection {
     return prefs
             .getStringList(key)
             ?.map((connectionJson) =>
-                HomeAssistantConnection.fromString(connectionJson))
+                HomeAssistantConnection.fromJson(jsonDecode(connectionJson)))
             .toList(growable: true) ??
         List.empty(growable: true);
   }
+}
+
+class HomeAssistantConnectionList extends LinkedList<HomeAssistantConnection> {
+  HomeAssistantConnectionList.fromJson(List<dynamic> json) : super() {
+    for (var entity in json) {
+      add(HomeAssistantConnection.fromJson(entity));
+    }
+  }
+
+  List<dynamic> toJson() => map((entity) => entity.toJson()).toList();
 }

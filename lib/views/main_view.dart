@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:fafnir/constants.dart';
+import 'package:fafnir/data/home_assistant_entity.dart';
 import 'package:fafnir/dialogs/add_connection_dialog.dart';
 import 'package:fafnir/dialogs/confirm_dialog.dart';
 import 'package:fafnir/views/select_entity_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/home_assistant_connection.dart';
@@ -71,8 +75,28 @@ class _MainViewState extends State<MainView> {
   }
 
   void _addEntity() async {
-    await Navigator.of(context).pushNamed('/select_entity',
+    var result = await Navigator.of(context).pushNamed('/select_entity',
         arguments: SelectEntityViewArguments(_homeAssistantConnections!.first));
+
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      _homeAssistantConnections?.first.entities
+          ?.add(result as HomeAssistantEntity);
+    });
+  }
+
+  void _toggleEntity(HomeAssistantEntity entity) async {
+    String domain = entity.entityId.split('.').first;
+    await Client().post(
+        Uri.parse(
+            '${_homeAssistantConnections?.first.url}/api/services/$domain/toggle'),
+        headers: {
+          'Authorization': 'Bearer ${_homeAssistantConnections?.first.token}'
+        },
+        body: jsonEncode({'entity_id': entity.entityId}));
   }
 
   @override
@@ -120,7 +144,15 @@ class _MainViewState extends State<MainView> {
                 ],
               ),
             )
-          : const SizedBox.shrink(),
+          : ListView(
+              children: _homeAssistantConnections!.first.entities!
+                  .map((entity) => ListTile(
+                        title: Text(entity.friendlyName),
+                        subtitle: Text(entity.entityId),
+                        onTap: () => _toggleEntity(entity),
+                      ))
+                  .toList(),
+            ),
       floatingActionButton: _homeAssistantConnections!.isNotEmpty
           ? FloatingActionButton(
               onPressed: _addEntity,

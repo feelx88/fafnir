@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:fafnir/data/home_assistant_connection.dart';
+import 'package:fafnir/data/home_assistant_entity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -19,15 +20,9 @@ class SelectEntityViewArguments {
   SelectEntityViewArguments(this.connection);
 }
 
-class HomeAssistantEntity {
-  final String friendlyName;
-  final String entityId;
-
-  HomeAssistantEntity(this.friendlyName, this.entityId);
-}
-
 class _SelectEntityViewState extends State<SelectEntityView> {
   List<HomeAssistantEntity>? _entities;
+
   bool _searching = false;
   String _filter = '';
 
@@ -40,10 +35,13 @@ class _SelectEntityViewState extends State<SelectEntityView> {
     Client().get(Uri.parse('${args.connection.url}/api/states'), headers: {
       'Authorization': 'Bearer ${args.connection.token}'
     }).then((data) {
+      print(data.body);
       setState(() {
         _entities = (jsonDecode(data.body) as List<dynamic>)
             .map((entry) => HomeAssistantEntity(
-                entry['friendly_name'] ?? entry['entity_id'] ?? '',
+                entry['attributes']?['friendly_name'] ??
+                    entry['entity_id'] ??
+                    '',
                 entry['entity_id'] ?? ''))
             .toList();
       });
@@ -61,6 +59,11 @@ class _SelectEntityViewState extends State<SelectEntityView> {
       _searching = !_searching;
       _filter = '';
     });
+  }
+
+  void _addEntity(HomeAssistantEntity entity) {
+    Navigator.pop(
+        context, HomeAssistantEntity(entity.friendlyName, entity.entityId));
   }
 
   @override
@@ -112,6 +115,7 @@ class _SelectEntityViewState extends State<SelectEntityView> {
                     .map((HomeAssistantEntity entity) => ListTile(
                           title: Text(entity.friendlyName),
                           subtitle: Text(entity.entityId),
+                          onTap: () => _addEntity(entity),
                         ))
                     .toList())
             : const Center(child: CircularProgressIndicator(value: null)));

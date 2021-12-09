@@ -100,9 +100,24 @@ class _MainViewState extends State<MainView> {
 
   void _toggleEntity(HomeAssistantEntity entity) async {
     String domain = entity.entityId.split('.').first;
+    late String service;
+
+    switch (domain) {
+      case 'light':
+      case 'switch':
+        service = '$domain/toggle';
+        break;
+      case 'scene':
+        service = 'scene/turn_on';
+        break;
+      case 'group':
+        service = 'light/toggle';
+        break;
+    }
+
     await Client().post(
         Uri.parse(
-            '${_homeAssistantConnections?.first.url}/api/services/$domain/toggle'),
+            '${_homeAssistantConnections?.first.url}/api/services/$service'),
         headers: {
           'Authorization': 'Bearer ${_homeAssistantConnections?.first.token}'
         },

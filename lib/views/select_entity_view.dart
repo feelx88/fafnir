@@ -66,12 +66,18 @@ class _SelectEntityViewState extends State<SelectEntityView> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          leading: _searching
+              ? IconButton(
+                  onPressed: _toggleFilter, icon: Icon(Icons.arrow_back))
+              : null,
           title: AnimatedSwitcher(
             duration: const Duration(milliseconds: 500),
             child: _searching
                 ? TextField(
                     autofocus: true,
                     decoration: const InputDecoration(label: Text('Filter')),
+                    controller:
+                        _filter == '' ? TextEditingController(text: '') : null,
                     onChanged: (value) => setState(() {
                       _filter = value;
                     }),
@@ -79,11 +85,14 @@ class _SelectEntityViewState extends State<SelectEntityView> {
                 : Text(widget.title),
           ),
           actions: [
-            IconButton(
-                onPressed: _toggleFilter,
-                icon: _searching
-                    ? const Icon(Icons.clear)
-                    : const Icon(Icons.search))
+            _searching
+                ? IconButton(
+                    onPressed: () => setState(() {
+                          _filter = '';
+                        }),
+                    icon: const Icon(Icons.clear))
+                : IconButton(
+                    onPressed: _toggleFilter, icon: const Icon(Icons.search))
           ],
         ),
         body: _entities != null

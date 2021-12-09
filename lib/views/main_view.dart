@@ -32,7 +32,8 @@ class _MainViewState extends State<MainView> {
     setState(() {
       _homeAssistantConnections =
           HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
-      _selection = (prefs.getString(selectedHomeAssistantIndex) ?? '0') as int;
+      _selection =
+          int.parse(prefs.getString(selectedHomeAssistantIndex) ?? '0');
     });
   }
 
@@ -40,6 +41,7 @@ class _MainViewState extends State<MainView> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     HomeAssistantConnection.toPrefs(
         prefs, homeAssistantUrlsKey, _homeAssistantConnections);
+    prefs.setString(selectedHomeAssistantIndex, _selection.toString());
   }
 
   void _addConnection([String? name, String? url, String? token]) {
@@ -163,6 +165,7 @@ class _MainViewState extends State<MainView> {
                       setState(() {
                         _selection = index;
                       });
+                      _save();
                     },
                     leading: Checkbox(
                       value: _selection == index,
@@ -171,6 +174,7 @@ class _MainViewState extends State<MainView> {
                           setState(() {
                             _selection = index;
                           });
+                          _save();
                         }
                       },
                     ),

@@ -21,27 +21,29 @@ class MainView extends StatefulWidget {
 }
 
 class _MainViewState extends State<MainView> {
-  List<HomeAssistantConnection>? _homeAssistantConnections;
+  List<HomeAssistantConnection> _homeAssistantConnections = List.empty();
 
-  _MainViewState() {
-    SharedPreferences.getInstance().then((prefs) {
-      setState(() {
-        _homeAssistantConnections =
-            HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
-      });
+  @override
+  void didChangeDependencies() async {
+    super.didChangeDependencies();
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _homeAssistantConnections =
+          HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
     });
   }
 
   void _save() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     HomeAssistantConnection.toPrefs(
-        prefs, homeAssistantUrlsKey, _homeAssistantConnections!);
+        prefs, homeAssistantUrlsKey, _homeAssistantConnections);
   }
 
   void _addConnection([String? name, String? url, String? token]) {
     AddConnectionDialog.create(context, name, url, token, (name, url, token) {
       setState(() {
-        _homeAssistantConnections!.add(
+        _homeAssistantConnections.add(
             HomeAssistantConnection(name: name!, url: url!, token: token!));
       });
 
@@ -59,7 +61,7 @@ class _MainViewState extends State<MainView> {
       'Delete',
       () {
         setState(() {
-          _homeAssistantConnections!.removeWhere(
+          _homeAssistantConnections.removeWhere(
               (connectionToCheck) => connectionToCheck.name == connection.name);
           Navigator.pop(context);
         });
@@ -72,14 +74,14 @@ class _MainViewState extends State<MainView> {
 
   void _addEntity() async {
     var result = await Navigator.of(context).pushNamed('/select_entity',
-        arguments: SelectEntityViewArguments(_homeAssistantConnections!.first));
+        arguments: SelectEntityViewArguments(_homeAssistantConnections.first));
 
     if (result == null) {
       return;
     }
 
     setState(() {
-      _homeAssistantConnections?.first.entities
+      _homeAssistantConnections.first.entities
           ?.add(result as HomeAssistantEntity);
     });
 
@@ -90,7 +92,7 @@ class _MainViewState extends State<MainView> {
     ConfirmDialog.create(context, 'Remove entity',
         'Do you want to remove entity ${entity.friendlyName}?', 'Remove', () {
       setState(() {
-        _homeAssistantConnections?.first.entities?.remove(entity);
+        _homeAssistantConnections.first.entities?.remove(entity);
         Navigator.pop(context);
       });
 
@@ -117,9 +119,9 @@ class _MainViewState extends State<MainView> {
 
     await Client().post(
         Uri.parse(
-            '${_homeAssistantConnections?.first.url}/api/services/$service'),
+            '${_homeAssistantConnections.first.url}/api/services/$service'),
         headers: {
-          'Authorization': 'Bearer ${_homeAssistantConnections?.first.token}'
+          'Authorization': 'Bearer ${_homeAssistantConnections.first.token}'
         },
         body: jsonEncode({'entity_id': entity.entityId}));
   }
@@ -145,7 +147,7 @@ class _MainViewState extends State<MainView> {
             onTap: _addConnection,
           ),
           const Divider(),
-          ...(_homeAssistantConnections!
+          ...(_homeAssistantConnections
               .map((connection) => ListTile(
                     title: Text(connection.name),
                     trailing: IconButton(
@@ -157,20 +159,20 @@ class _MainViewState extends State<MainView> {
               .toList())
         ]),
       ),
-      body: _homeAssistantConnections!.isEmpty ||
-              _homeAssistantConnections!.first.entities == null
+      body: _homeAssistantConnections.isEmpty ||
+              _homeAssistantConnections.first.entities == null
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _homeAssistantConnections!.isEmpty
+                  _homeAssistantConnections.isEmpty
                       ? const Text('No connections configured')
                       : const Text('No entities configured')
                 ],
               ),
             )
           : ListView(
-              children: _homeAssistantConnections!.first.entities!
+              children: _homeAssistantConnections.first.entities!
                   .map((entity) => ListTile(
                         title: Text(entity.friendlyName),
                         subtitle: Text(entity.entityId),
@@ -179,7 +181,7 @@ class _MainViewState extends State<MainView> {
                       ))
                   .toList(),
             ),
-      floatingActionButton: _homeAssistantConnections!.isNotEmpty
+      floatingActionButton: _homeAssistantConnections.isNotEmpty
           ? FloatingActionButton(
               onPressed: _addEntity,
               child: const Icon(Icons.add),

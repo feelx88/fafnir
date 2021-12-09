@@ -23,6 +23,7 @@ class MainView extends StatefulWidget {
 class _MainViewState extends State<MainView> {
   List<HomeAssistantConnection> _homeAssistantConnections = List.empty();
   int _selection = 0;
+  bool _editMode = false;
 
   @override
   void didChangeDependencies() async {
@@ -208,16 +209,39 @@ class _MainViewState extends State<MainView> {
                         title: Text(entity.friendlyName),
                         subtitle: Text(entity.entityId),
                         onTap: () => _toggleEntity(entity),
-                        onLongPress: () => _removeEntity(entity),
+                        trailing: _editMode
+                            ? IconButton(
+                                icon: const Icon(Icons.delete),
+                                color: Colors.red,
+                                onPressed: () => _removeEntity(entity),
+                              )
+                            : null,
                       ))
                   .toList(),
             ),
       floatingActionButton: _homeAssistantConnections.isNotEmpty
           ? FloatingActionButton(
-              onPressed: _addEntity,
-              child: const Icon(Icons.add),
+              onPressed: () {
+                if (_editMode) {
+                  _addEntity();
+                } else {
+                  setState(() {
+                    _editMode = true;
+                  });
+                }
+              },
+              child: Icon(_editMode ? Icons.add : Icons.edit),
             )
           : const SizedBox.shrink(),
+      persistentFooterButtons: _editMode
+          ? [
+              TextButton(
+                  onPressed: () => setState(() {
+                        _editMode = false;
+                      }),
+                  child: const Text('End edit mode'))
+            ]
+          : null,
     );
   }
 }

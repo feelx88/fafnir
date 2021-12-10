@@ -79,19 +79,20 @@ class _MainViewState extends State<MainView> {
 
   void _addEntity() async {
     var result = await Navigator.of(context).pushNamed('/select_entity',
-        arguments: SelectEntityViewArguments(
-            _homeAssistantConnections.elementAt(_selection)));
+            arguments: SelectEntityViewArguments(
+                _homeAssistantConnections.elementAt(_selection)))
+        as HomeAssistantEntity?;
 
     if (result == null) {
       return;
     }
 
     setState(() {
-      _homeAssistantConnections
-          .elementAt(_selection)
-          .entities
-          .add(result as HomeAssistantEntity);
+      _homeAssistantConnections.elementAt(_selection).entities.add(result);
     });
+
+    _editEntity(_homeAssistantConnections.elementAt(_selection).entities.length,
+        result);
 
     _save();
   }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ConfirmDialog {
-  static void create(BuildContext context, String title, String questionText,
-      String confirmButtonText, VoidCallback callback,
-      {Color? positiveButtonColor}) async {
-    await showDialog<bool>(
+  static Future<bool?> create(BuildContext context, String title,
+      String questionText, String confirmButtonText, VoidCallback callback,
+      {Color? positiveButtonColor, VoidCallback? cancelCallback}) async {
+    return await showDialog<bool>(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -14,7 +14,10 @@ class ConfirmDialog {
             content: Text(questionText),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                  cancelCallback!();
+                },
                 child: const Text(
                   'Cancel',
                 ),

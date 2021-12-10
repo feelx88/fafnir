@@ -98,8 +98,8 @@ class _MainViewState extends State<MainView> {
     _save();
   }
 
-  void _removeEntity(HomeAssistantEntity entity) {
-    ConfirmDialog.create(context, 'Remove entity',
+  Future<bool?> _removeEntity(HomeAssistantEntity entity) {
+    return ConfirmDialog.create(context, 'Remove entity',
         'Do you want to remove entity ${entity.friendlyName}?', 'Remove', () {
       setState(() {
         _homeAssistantConnections.elementAt(_selection).entities.remove(entity);
@@ -107,7 +107,24 @@ class _MainViewState extends State<MainView> {
       });
 
       _save();
-    }, positiveButtonColor: Theme.of(context).errorColor);
+    },
+        positiveButtonColor: Theme.of(context).errorColor,
+        cancelCallback: () => setState(() {
+              _homeAssistantConnections = _homeAssistantConnections;
+            }));
+  }
+
+  void _reorderEntities(oldIndex, newIndex) {
+    setState(() {
+      _homeAssistantConnections.elementAt(_selection).entities.insert(
+          newIndex - (oldIndex < newIndex ? 1 : 0),
+          _homeAssistantConnections
+              .elementAt(_selection)
+              .entities
+              .removeAt(oldIndex));
+    });
+
+    _save();
   }
 
   void _editEntity(int index, HomeAssistantEntity entity) async {
@@ -135,6 +152,66 @@ class _MainViewState extends State<MainView> {
               'Bearer ${_homeAssistantConnections.elementAt(_selection).token}'
         },
         body: jsonEncode({'entity_id': entity.entityId}));
+  }
+
+  Widget _body() {
+    if (_homeAssistantConnections.isEmpty ||
+        _homeAssistantConnections.elementAt(_selection).entities.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _homeAssistantConnections.isEmpty
+                ? const Text('No connections configured')
+                : const Text('No entities configured')
+          ],
+        ),
+      );
+    }
+
+    Map<int, HomeAssistantEntity> map = _homeAssistantConnections
+        .elementAt(_selection)
+        .entities
+        .toList()
+        .asMap();
+
+    if (_editMode) {
+      return ReorderableListView(
+          buildDefaultDragHandles: true,
+          children: map
+              .map((index, entity) => MapEntry(
+                  index,
+                  Dismissible(
+                      key: Key(entity.entityId),
+                      confirmDismiss: (direction) => _removeEntity(entity),
+                      child: ListTile(
+                        title: Text(entity.friendlyName),
+                        subtitle: Text(entity.entityId),
+                        onTap: () => _editEntity(index, entity),
+                        trailing: ReorderableDragStartListener(
+                            index: index, child: const Icon(Icons.drag_handle)),
+                        leading: IconButton(
+                          icon: Icon(
+                            Icons.delete,
+                            color: Theme.of(context).errorColor,
+                          ),
+                          onPressed: () => _removeEntity(entity),
+                        ),
+                      ))))
+              .values
+              .toList(),
+          onReorder: _reorderEntities);
+    }
+
+    return ListView(
+      children: map
+          .map((index, entity) => MapEntry(
+              index,
+              HomeAssistantDomain.configurations[entity.serviceDomain]!
+                  .widgetFactory(entity, _serviceCall) as Widget))
+          .values
+          .toList(),
+    );
   }
 
   @override
@@ -197,45 +274,7 @@ class _MainViewState extends State<MainView> {
               .toList())
         ]),
       ),
-      body: _homeAssistantConnections.isEmpty ||
-              _homeAssistantConnections.elementAt(_selection).entities.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _homeAssistantConnections.isEmpty
-                      ? const Text('No connections configured')
-                      : const Text('No entities configured')
-                ],
-              ),
-            )
-          : ListView(
-              children: _homeAssistantConnections
-                  .elementAt(_selection)
-                  .entities
-                  .toList()
-                  .asMap()
-                  .map((index, entity) => MapEntry(
-                      index,
-                      _editMode
-                          ? ListTile(
-                              title: Text(entity.friendlyName),
-                              subtitle: Text(entity.entityId),
-                              onTap: () => _editEntity(index, entity),
-                              trailing: IconButton(
-                                icon: Icon(
-                                  Icons.delete,
-                                  color: Theme.of(context).errorColor,
-                                ),
-                                onPressed: () => _removeEntity(entity),
-                              ),
-                            )
-                          : HomeAssistantDomain
-                              .configurations[entity.serviceDomain]!
-                              .widgetFactory(entity, _serviceCall) as Widget))
-                  .values
-                  .toList(),
-            ),
+      body: _body(),
       floatingActionButton: _homeAssistantConnections.isNotEmpty && _editMode
           ? FloatingActionButton(
               onPressed: () {

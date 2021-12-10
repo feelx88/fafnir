@@ -1,12 +1,13 @@
+library home_assistant;
+
 import 'dart:convert';
 
-class HomeAssistantEntity {
+class Entity {
   String friendlyName;
   String entityId;
   String serviceDomain;
 
-  HomeAssistantEntity(this.friendlyName, this.entityId,
-      {this.serviceDomain = 'light'});
+  Entity(this.friendlyName, this.entityId, {this.serviceDomain = 'light'});
 
   @override
   String toString() {
@@ -19,17 +20,17 @@ class HomeAssistantEntity {
         'service_domain': serviceDomain
       };
 
-  HomeAssistantEntity.fromJson(Map<String, dynamic> json)
+  Entity.fromJson(Map<String, dynamic> json)
       : friendlyName = json['friendly_name'],
         entityId = json['entity_id'],
         serviceDomain = json['service_domain'] ?? 'light';
 }
 
-extension HomeAssistantEntityList on List<HomeAssistantEntity> {
-  static List<HomeAssistantEntity> fromJson(List<dynamic> json) {
-    List<HomeAssistantEntity> list = List.empty(growable: true);
+extension EntityList on List<Entity> {
+  static List<Entity> fromJson(List<dynamic> json) {
+    List<Entity> list = List.empty(growable: true);
     for (var entity in json) {
-      list.add(HomeAssistantEntity.fromJson(entity));
+      list.add(Entity.fromJson(entity));
     }
     return list;
   }

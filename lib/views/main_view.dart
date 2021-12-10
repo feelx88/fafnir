@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:fafnir/constants.dart';
-import 'package:fafnir/data/home_assistant_domain.dart';
-import 'package:fafnir/data/home_assistant_entity.dart';
+import 'package:fafnir/data/home_assistant/domain.dart';
+import 'package:fafnir/data/home_assistant/entity.dart';
 import 'package:fafnir/dialogs/add_connection_dialog.dart';
 import 'package:fafnir/dialogs/confirm_dialog.dart';
 import 'package:fafnir/views/select_entity_view.dart';
@@ -11,7 +11,7 @@ import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/home_assistant_connection.dart';
+import '../data/home_assistant/connection.dart';
 
 class MainView extends StatefulWidget {
   const MainView({Key? key, required this.title}) : super(key: key);
@@ -22,7 +22,7 @@ class MainView extends StatefulWidget {
 }
 
 class _MainViewState extends State<MainView> {
-  List<HomeAssistantConnection> _homeAssistantConnections = List.empty();
+  List<Connection> _Connections = List.empty();
   int _selection = 0;
   bool _editMode = false;
 
@@ -32,8 +32,7 @@ class _MainViewState extends State<MainView> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _homeAssistantConnections =
-          HomeAssistantConnection.fromPrefs(prefs, homeAssistantUrlsKey);
+      _Connections = Connection.fromPrefs(prefs, homeAssistantUrlsKey);
       _selection =
           int.parse(prefs.getString(selectedHomeAssistantIndex) ?? '0');
     });
@@ -41,16 +40,14 @@ class _MainViewState extends State<MainView> {
 
   void _save() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    HomeAssistantConnection.toPrefs(
-        prefs, homeAssistantUrlsKey, _homeAssistantConnections);
+    Connection.toPrefs(prefs, homeAssistantUrlsKey, _Connections);
     prefs.setString(selectedHomeAssistantIndex, _selection.toString());
   }
 
   void _addConnection([String? name, String? url, String? token]) {
     AddConnectionDialog.create(context, name, url, token, (name, url, token) {
       setState(() {
-        _homeAssistantConnections.add(
-            HomeAssistantConnection(name: name!, url: url!, token: token!));
+        _Connections.add(Connection(name: name!, url: url!, token: token!));
       });
 
       _save();
@@ -59,7 +56,7 @@ class _MainViewState extends State<MainView> {
     });
   }
 
-  void _deleteConnection(HomeAssistantConnection connection) {
+  void _deleteConnection(Connection connection) {
     ConfirmDialog.create(
       context,
       'Delete connection',
@@ -67,7 +64,7 @@ class _MainViewState extends State<MainView> {
       'Delete',
       () {
         setState(() {
-          _homeAssistantConnections.removeWhere(
+          _Connections.removeWhere(
               (connectionToCheck) => connectionToCheck.name == connection.name);
           Navigator.pop(context);
         });
@@ -80,30 +77,28 @@ class _MainViewState extends State<MainView> {
 
   void _addEntity() async {
     var result = await Navigator.of(context).pushNamed('/select_entity',
-            arguments: SelectEntityViewArguments(
-                _homeAssistantConnections.elementAt(_selection)))
-        as HomeAssistantEntity?;
+            arguments:
+                SelectEntityViewArguments(_Connections.elementAt(_selection)))
+        as Entity?;
 
     if (result == null) {
       return;
     }
 
     setState(() {
-      _homeAssistantConnections.elementAt(_selection).entities.add(result);
+      _Connections.elementAt(_selection).entities.add(result);
     });
 
-    _editEntity(
-        _homeAssistantConnections.elementAt(_selection).entities.length - 1,
-        result);
+    _editEntity(_Connections.elementAt(_selection).entities.length - 1, result);
 
     _save();
   }
 
-  Future<bool?> _removeEntity(HomeAssistantEntity entity) {
+  Future<bool?> _removeEntity(Entity entity) {
     return ConfirmDialog.create(context, 'Remove entity',
         'Do you want to remove entity ${entity.friendlyName}?', 'Remove', () {
       setState(() {
-        _homeAssistantConnections.elementAt(_selection).entities.remove(entity);
+        _Connections.elementAt(_selection).entities.remove(entity);
         Navigator.pop(context);
       });
 
@@ -111,59 +106,55 @@ class _MainViewState extends State<MainView> {
     },
         positiveButtonColor: Theme.of(context).errorColor,
         cancelCallback: () => setState(() {
-              _homeAssistantConnections = _homeAssistantConnections;
+              _Connections = _Connections;
             }));
   }
 
   void _reorderEntities(oldIndex, newIndex) {
     setState(() {
-      _homeAssistantConnections.elementAt(_selection).entities.insert(
+      _Connections.elementAt(_selection).entities.insert(
           newIndex - (oldIndex < newIndex ? 1 : 0),
-          _homeAssistantConnections
-              .elementAt(_selection)
-              .entities
-              .removeAt(oldIndex));
+          _Connections.elementAt(_selection).entities.removeAt(oldIndex));
     });
 
     _save();
   }
 
-  void _editEntity(int index, HomeAssistantEntity entity) async {
+  void _editEntity(int index, Entity entity) async {
     var result =
         await Navigator.pushNamed(context, '/edit_entity', arguments: entity)
-            as HomeAssistantEntity?;
+            as Entity?;
 
     if (result == null) {
       return;
     }
 
     setState(() {
-      _homeAssistantConnections.elementAt(_selection).entities[index] = entity;
+      _Connections.elementAt(_selection).entities[index] = entity;
     });
 
     _save();
   }
 
-  void _serviceCall(HomeAssistantEntity entity, String service) async {
+  void _serviceCall(Entity entity, String service) async {
     await Client().post(
         Uri.parse(
-            '${_homeAssistantConnections.elementAt(_selection).url}/api/services/$service'),
+            '${_Connections.elementAt(_selection).url}/api/services/$service'),
         headers: {
-          'Authorization':
-              'Bearer ${_homeAssistantConnections.elementAt(_selection).token}'
+          'Authorization': 'Bearer ${_Connections.elementAt(_selection).token}'
         },
         body: jsonEncode({'entity_id': entity.entityId}));
   }
 
   Widget _body() {
     // Empty text
-    if (_homeAssistantConnections.isEmpty ||
-        _homeAssistantConnections.elementAt(_selection).entities.isEmpty) {
+    if (_Connections.isEmpty ||
+        _Connections.elementAt(_selection).entities.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _homeAssistantConnections.isEmpty
+            _Connections.isEmpty
                 ? const Text('No connections configured')
                 : const Text('No entities configured')
           ],
@@ -172,11 +163,8 @@ class _MainViewState extends State<MainView> {
     }
 
     // Prepare entity map
-    Map<int, HomeAssistantEntity> map = _homeAssistantConnections
-        .elementAt(_selection)
-        .entities
-        .toList()
-        .asMap();
+    Map<int, Entity> map =
+        _Connections.elementAt(_selection).entities.toList().asMap();
 
     // Show edit mode list tiles
     if (_editMode) {
@@ -212,7 +200,7 @@ class _MainViewState extends State<MainView> {
       children: map
           .map((index, entity) => MapEntry(
               index,
-              HomeAssistantDomain.configurations[entity.serviceDomain]!
+              Domain.configurations[entity.serviceDomain]!
                   .widgetFactory(entity, _serviceCall) as Widget))
           .values
           .toList(),
@@ -248,8 +236,7 @@ class _MainViewState extends State<MainView> {
             }),
           ),
           const Divider(),
-          ...(_homeAssistantConnections
-              .asMap()
+          ...(_Connections.asMap()
               .map((index, connection) => MapEntry(
                   index,
                   CheckboxListTile(
@@ -280,7 +267,7 @@ class _MainViewState extends State<MainView> {
         ]),
       ),
       body: _body(),
-      floatingActionButton: _homeAssistantConnections.isNotEmpty && _editMode
+      floatingActionButton: _Connections.isNotEmpty && _editMode
           ? FloatingActionButton(
               onPressed: () {
                 if (_editMode) {

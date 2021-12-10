@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:fafnir/data/home_assistant_connection.dart';
-import 'package:fafnir/data/home_assistant_entity.dart';
+import 'package:fafnir/data/home_assistant/connection.dart';
+import 'package:fafnir/data/home_assistant/entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
@@ -15,12 +15,12 @@ class SelectEntityView extends StatefulWidget {
 }
 
 class SelectEntityViewArguments {
-  final HomeAssistantConnection connection;
+  final Connection connection;
   SelectEntityViewArguments(this.connection);
 }
 
 class _SelectEntityViewState extends State<SelectEntityView> {
-  List<HomeAssistantEntity>? _entities;
+  List<Entity>? _entities;
 
   bool _searching = false;
   String _filter = '';
@@ -36,7 +36,7 @@ class _SelectEntityViewState extends State<SelectEntityView> {
     }).then((data) {
       setState(() {
         _entities = (jsonDecode(data.body) as List<dynamic>)
-            .map((entry) => HomeAssistantEntity(
+            .map((entry) => Entity(
                 entry['attributes']?['friendly_name'] ??
                     entry['entity_id'] ??
                     '',
@@ -46,7 +46,7 @@ class _SelectEntityViewState extends State<SelectEntityView> {
     });
   }
 
-  bool _filterFn(HomeAssistantEntity entity) {
+  bool _filterFn(Entity entity) {
     return _filter == '' ||
         (entity.entityId).contains(RegExp(_filter, caseSensitive: false)) ||
         (entity.friendlyName).contains(RegExp(_filter, caseSensitive: false));
@@ -59,9 +59,8 @@ class _SelectEntityViewState extends State<SelectEntityView> {
     });
   }
 
-  void _addEntity(HomeAssistantEntity entity) {
-    Navigator.pop(
-        context, HomeAssistantEntity(entity.friendlyName, entity.entityId));
+  void _addEntity(Entity entity) {
+    Navigator.pop(context, Entity(entity.friendlyName, entity.entityId));
   }
 
   @override
@@ -110,7 +109,7 @@ class _SelectEntityViewState extends State<SelectEntityView> {
             ? ListView(
                 children: _entities!
                     .where((element) => _filterFn(element))
-                    .map((HomeAssistantEntity entity) => ListTile(
+                    .map((Entity entity) => ListTile(
                           title: Text(entity.friendlyName),
                           subtitle: Text(entity.entityId),
                           onTap: () => _addEntity(entity),

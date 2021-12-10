@@ -1,5 +1,5 @@
-import 'package:fafnir/data/home_assistant_domain.dart';
-import 'package:fafnir/data/home_assistant_entity.dart';
+import 'package:fafnir/data/home_assistant/domain.dart';
+import 'package:fafnir/data/home_assistant/entity.dart';
 import 'package:flutter/material.dart';
 
 class EditEntityView extends StatefulWidget {
@@ -12,15 +12,14 @@ class EditEntityView extends StatefulWidget {
 }
 
 class _EditEntityState extends State<EditEntityView> {
-  HomeAssistantEntity? _entity;
+  Entity? _entity;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
     setState(() {
-      _entity =
-          ModalRoute.of(context)!.settings.arguments as HomeAssistantEntity;
+      _entity = ModalRoute.of(context)!.settings.arguments as Entity;
     });
   }
 
@@ -52,9 +51,11 @@ class _EditEntityState extends State<EditEntityView> {
                       _entity!.serviceDomain = value as String;
                     }),
                 value: _entity!.serviceDomain,
-                items: HomeAssistantDomain.configurations
+                items: Domain.configurations
                     .map((key, value) => MapEntry(
-                        key, DropdownMenuItem(child: Text(value.name), value: value.id)))
+                        key,
+                        DropdownMenuItem(
+                            child: Text(value.name), value: value.id)))
                     .values
                     .toList(),
                 hint: const Text('Service type'))

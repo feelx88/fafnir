@@ -1,3 +1,4 @@
+import 'package:fafnir/data/home_assistant_domain.dart';
 import 'package:fafnir/data/home_assistant_entity.dart';
 import 'package:flutter/material.dart';
 
@@ -51,13 +52,11 @@ class _EditEntityState extends State<EditEntityView> {
                       _entity!.serviceDomain = value as String;
                     }),
                 value: _entity!.serviceDomain,
-                items: const [
-                  DropdownMenuItem(
-                    child: Text('Light'),
-                    value: 'light',
-                  ),
-                  DropdownMenuItem(child: Text('Switch'), value: 'switch')
-                ],
+                items: HomeAssistantDomain.configurations
+                    .map((key, value) => MapEntry(
+                        key, DropdownMenuItem(child: Text(value.name), value: value.id)))
+                    .values
+                    .toList(),
                 hint: const Text('Service type'))
           ],
         ));

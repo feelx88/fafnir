@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:fafnir/constants.dart';
+import 'package:fafnir/data/home_assistant_domain.dart';
 import 'package:fafnir/data/home_assistant_entity.dart';
 import 'package:fafnir/dialogs/add_connection_dialog.dart';
 import 'package:fafnir/dialogs/confirm_dialog.dart';
@@ -125,22 +126,7 @@ class _MainViewState extends State<MainView> {
     _save();
   }
 
-  void _toggleEntity(HomeAssistantEntity entity) async {
-    late String service;
-
-    switch (entity.serviceDomain) {
-      case 'light':
-      case 'switch':
-        service = '${entity.serviceDomain}/toggle';
-        break;
-      case 'scene':
-        service = 'scene/turn_on';
-        break;
-      case 'group':
-        service = 'light/toggle';
-        break;
-    }
-
+  void _serviceCall(HomeAssistantEntity entity, String service) async {
     await Client().post(
         Uri.parse(
             '${_homeAssistantConnections.elementAt(_selection).url}/api/services/$service'),
@@ -231,20 +217,22 @@ class _MainViewState extends State<MainView> {
                   .asMap()
                   .map((index, entity) => MapEntry(
                       index,
-                      ListTile(
-                        title: Text(entity.friendlyName),
-                        subtitle: Text(entity.entityId),
-                        onTap: () => _editMode
-                            ? _editEntity(index, entity)
-                            : _toggleEntity(entity),
-                        trailing: _editMode
-                            ? IconButton(
-                                icon: const Icon(Icons.delete),
-                                color: Colors.red,
+                      _editMode
+                          ? ListTile(
+                              title: Text(entity.friendlyName),
+                              subtitle: Text(entity.entityId),
+                              onTap: () => _editEntity(index, entity),
+                              trailing: IconButton(
+                                icon: Icon(
+                                  Icons.delete,
+                                  color: Theme.of(context).errorColor,
+                                ),
                                 onPressed: () => _removeEntity(entity),
-                              )
-                            : null,
-                      )))
+                              ),
+                            )
+                          : HomeAssistantDomain
+                              .configurations[entity.serviceDomain]!
+                              .widgetFactory(entity, _serviceCall) as Widget))
                   .values
                   .toList(),
             ),

@@ -50,7 +50,6 @@ class _EditEntityState extends State<EditEntityView> {
                 onChanged: (value) => setState(() {
                       _entity!.serviceDomain = value as String;
                     }),
-                isExpanded: true,
                 value: _entity!.serviceDomain,
                 items: const [
                   DropdownMenuItem(

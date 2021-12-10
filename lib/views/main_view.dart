@@ -168,37 +168,43 @@ class _MainViewState extends State<MainView> {
           ),
           ListTile(
             title: const Text('Add Home Assistant connection'),
+            trailing: const Icon(Icons.add),
             onTap: _addConnection,
+          ),
+          SwitchListTile(
+            title: const Text('Edit mode'),
+            value: _editMode,
+            onChanged: (value) => setState(() {
+              _editMode = value;
+            }),
           ),
           const Divider(),
           ...(_homeAssistantConnections
               .asMap()
               .map((index, connection) => MapEntry(
                   index,
-                  ListTile(
+                  CheckboxListTile(
                     title: Text(connection.name),
-                    onTap: () {
-                      setState(() {
-                        _selection = index;
-                      });
+                    value: _selection == index,
+                    secondary: _editMode
+                        ? IconButton(
+                            icon: const Icon(Icons.delete),
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            alignment: Alignment.centerLeft,
+                            color: Colors.red,
+                            onPressed: () => _deleteConnection(connection),
+                          )
+                        : const Icon(Icons.home),
+                    onChanged: (value) {
+                      if (value!) {
+                        setState(() {
+                          _selection = index;
+                        });
+                        _save();
+                      }
                       _save();
                     },
-                    leading: Checkbox(
-                      value: _selection == index,
-                      onChanged: (value) {
-                        if (value!) {
-                          setState(() {
-                            _selection = index;
-                          });
-                          _save();
-                        }
-                      },
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      color: Colors.red,
-                      onPressed: () => _deleteConnection(connection),
-                    ),
                   )))
               .values
               .toList())
@@ -241,29 +247,16 @@ class _MainViewState extends State<MainView> {
                   .values
                   .toList(),
             ),
-      floatingActionButton: _homeAssistantConnections.isNotEmpty
+      floatingActionButton: _homeAssistantConnections.isNotEmpty && _editMode
           ? FloatingActionButton(
               onPressed: () {
                 if (_editMode) {
                   _addEntity();
-                } else {
-                  setState(() {
-                    _editMode = true;
-                  });
                 }
               },
-              child: Icon(_editMode ? Icons.add : Icons.edit),
+              child: const Icon(Icons.add),
             )
           : const SizedBox.shrink(),
-      persistentFooterButtons: _editMode
-          ? [
-              TextButton(
-                  onPressed: () => setState(() {
-                        _editMode = false;
-                      }),
-                  child: const Text('End edit mode'))
-            ]
-          : null,
     );
   }
 }

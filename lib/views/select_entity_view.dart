@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:fafnir/data/home_assistant_connection.dart';
 import 'package:fafnir/data/home_assistant_entity.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
@@ -35,7 +34,6 @@ class _SelectEntityViewState extends State<SelectEntityView> {
     Client().get(Uri.parse('${args.connection.url}/api/states'), headers: {
       'Authorization': 'Bearer ${args.connection.token}'
     }).then((data) {
-      print(data.body);
       setState(() {
         _entities = (jsonDecode(data.body) as List<dynamic>)
             .map((entry) => HomeAssistantEntity(

@@ -108,14 +108,29 @@ class _MainViewState extends State<MainView> {
     }, positiveButtonColor: Theme.of(context).errorColor);
   }
 
+  void _editEntity(int index, HomeAssistantEntity entity) async {
+    var result =
+        await Navigator.pushNamed(context, '/edit_entity', arguments: entity)
+            as HomeAssistantEntity?;
+
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      _homeAssistantConnections.elementAt(_selection).entities[index] = entity;
+    });
+
+    _save();
+  }
+
   void _toggleEntity(HomeAssistantEntity entity) async {
-    String domain = entity.entityId.split('.').elementAt(_selection);
     late String service;
 
-    switch (domain) {
+    switch (entity.serviceDomain) {
       case 'light':
       case 'switch':
-        service = '$domain/toggle';
+        service = '${entity.serviceDomain}/toggle';
         break;
       case 'scene':
         service = 'scene/turn_on';
@@ -205,10 +220,16 @@ class _MainViewState extends State<MainView> {
               children: _homeAssistantConnections
                   .elementAt(_selection)
                   .entities
-                  .map((entity) => ListTile(
+                  .toList()
+                  .asMap()
+                  .map((index, entity) => MapEntry(
+                      index,
+                      ListTile(
                         title: Text(entity.friendlyName),
                         subtitle: Text(entity.entityId),
-                        onTap: () => _toggleEntity(entity),
+                        onTap: () => _editMode
+                            ? _editEntity(index, entity)
+                            : _toggleEntity(entity),
                         trailing: _editMode
                             ? IconButton(
                                 icon: const Icon(Icons.delete),
@@ -216,7 +237,8 @@ class _MainViewState extends State<MainView> {
                                 onPressed: () => _removeEntity(entity),
                               )
                             : null,
-                      ))
+                      )))
+                  .values
                   .toList(),
             ),
       floatingActionButton: _homeAssistantConnections.isNotEmpty

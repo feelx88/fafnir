@@ -1,20 +1,19 @@
-import 'dart:collection';
 import 'dart:convert';
 
 import 'package:fafnir/data/home_assistant_entity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class HomeAssistantConnection extends LinkedListEntry<HomeAssistantConnection> {
+class HomeAssistantConnection {
   late String name;
   late String token;
   late String url;
-  late HomeAssistantEntityList entities;
+  late List<HomeAssistantEntity> entities;
 
   HomeAssistantConnection(
       {required this.name,
       required this.token,
       required this.url,
-      HomeAssistantEntityList? entities}) {
+      List<HomeAssistantEntity>? entities}) {
     this.entities = entities ?? HomeAssistantEntityList.fromJson([]);
   }
 
@@ -46,11 +45,13 @@ class HomeAssistantConnection extends LinkedListEntry<HomeAssistantConnection> {
   }
 }
 
-class HomeAssistantConnectionList extends LinkedList<HomeAssistantConnection> {
-  HomeAssistantConnectionList.fromJson(List<dynamic> json) : super() {
+extension HomeAssistantConnectionList on List<HomeAssistantConnection> {
+  static List<HomeAssistantConnection> fromJson(List<dynamic> json) {
+    List<HomeAssistantConnection> list = List.empty(growable: true);
     for (var entity in json) {
-      add(HomeAssistantConnection.fromJson(entity));
+      list.add(HomeAssistantConnection.fromJson(entity));
     }
+    return list;
   }
 
   List<dynamic> toJson() => map((entity) => entity.toJson()).toList();

@@ -29,7 +29,8 @@ class HomeAssistantDomain {
         name: 'Media Player',
         widgetFactory: (HomeAssistantEntity entity, Function serviceCall) =>
             Padding(
-                padding: kTabLabelPadding,
+                padding:
+                    kTabLabelPadding.copyWith(top: kMaterialListPadding.top),
                 child: Column(
                   children: [
                     Row(

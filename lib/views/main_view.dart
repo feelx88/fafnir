@@ -92,7 +92,8 @@ class _MainViewState extends State<MainView> {
       _homeAssistantConnections.elementAt(_selection).entities.add(result);
     });
 
-    _editEntity(_homeAssistantConnections.elementAt(_selection).entities.length,
+    _editEntity(
+        _homeAssistantConnections.elementAt(_selection).entities.length - 1,
         result);
 
     _save();
@@ -155,6 +156,7 @@ class _MainViewState extends State<MainView> {
   }
 
   Widget _body() {
+    // Empty text
     if (_homeAssistantConnections.isEmpty ||
         _homeAssistantConnections.elementAt(_selection).entities.isEmpty) {
       return Center(
@@ -169,12 +171,14 @@ class _MainViewState extends State<MainView> {
       );
     }
 
+    // Prepare entity map
     Map<int, HomeAssistantEntity> map = _homeAssistantConnections
         .elementAt(_selection)
         .entities
         .toList()
         .asMap();
 
+    // Show edit mode list tiles
     if (_editMode) {
       return ReorderableListView(
           buildDefaultDragHandles: true,
@@ -203,6 +207,7 @@ class _MainViewState extends State<MainView> {
           onReorder: _reorderEntities);
     }
 
+    // Show the domain-specific implementation of the entities
     return ListView(
       children: map
           .map((index, entity) => MapEntry(

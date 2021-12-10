@@ -10,7 +10,6 @@ class HomeAssistantDomain {
         widgetFactory: (HomeAssistantEntity entity, Function serviceCall) =>
             ListTile(
               title: Text(entity.friendlyName),
-              subtitle: Text(entity.entityId),
               trailing: const Icon(Icons.lightbulb),
               onTap: () => serviceCall(entity, 'light/toggle'),
             )),
@@ -20,7 +19,6 @@ class HomeAssistantDomain {
         widgetFactory: (HomeAssistantEntity entity, Function serviceCall) =>
             ListTile(
               title: Text(entity.friendlyName),
-              subtitle: Text(entity.entityId),
               trailing: const Icon(Icons.toggle_on),
               onTap: () => serviceCall(entity, 'switch/toggle'),
             )),
@@ -74,6 +72,15 @@ class HomeAssistantDomain {
               subtitle: Text(entity.entityId),
               trailing: const Icon(Icons.image),
               onTap: () => serviceCall(entity, 'scene/turn_on'),
+            )),
+    'input_boolean': HomeAssistantDomain(
+        id: 'input_boolean',
+        name: 'Boolean input',
+        widgetFactory: (HomeAssistantEntity entity, Function serviceCall) =>
+            ListTile(
+              title: Text(entity.friendlyName),
+              trailing: const Icon(Icons.code),
+              onTap: () => serviceCall(entity, 'input_boolean/toggle'),
             )),
   };
 

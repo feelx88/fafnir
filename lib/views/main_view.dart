@@ -201,7 +201,7 @@ class _MainViewState extends State<MainView> {
           .map((index, entity) => MapEntry(
               index,
               Domain.configurations[entity.serviceDomain]!
-                  .widgetFactory(entity, _serviceCall) as Widget))
+                  .widgetFactory(context, entity, _serviceCall) as Widget))
           .values
           .toList(),
     );

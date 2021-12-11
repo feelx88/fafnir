@@ -29,6 +29,7 @@ class _EditEntityState extends State<EditEntityView> {
 
   @override
   Widget build(BuildContext context) {
+    print(_entity!.serviceDomain);
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
@@ -58,7 +59,27 @@ class _EditEntityState extends State<EditEntityView> {
                             child: Text(value.name), value: value.id)))
                     .values
                     .toList(),
-                hint: const Text('Service type'))
+                hint: const Text('Service type')),
+            ...(Domain.configurations[_entity!.serviceDomain]!.features.map(
+                (feature) => Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(feature.name),
+                          Checkbox(
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  if (value!) {
+                                    _entity!.features.add(DomainFeature(
+                                        id: feature.id, name: feature.name));
+                                  } else {
+                                    _entity!.features.removeWhere(
+                                        (element) => element.id == feature.id);
+                                  }
+                                });
+                              },
+                              value: _entity!.features
+                                  .any((element) => element.id == feature.id))
+                        ]))).toList()
           ],
         ));
   }

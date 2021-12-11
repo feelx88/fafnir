@@ -8,6 +8,7 @@ import 'package:fafnir/dialogs/confirm_dialog.dart';
 import 'package:fafnir/views/select_entity_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,6 +26,7 @@ class _MainViewState extends State<MainView> {
   List<Connection> _Connections = List.empty();
   int _selection = 0;
   bool _editMode = false;
+  bool _showOnLockscreen = false;
 
   @override
   void didChangeDependencies() async {
@@ -35,6 +37,7 @@ class _MainViewState extends State<MainView> {
       _Connections = Connection.fromPrefs(prefs, homeAssistantUrlsKey);
       _selection =
           int.parse(prefs.getString(selectedHomeAssistantIndex) ?? '0');
+      _showOnLockscreen = prefs.getString(showOnLockscreen) == 'true';
     });
   }
 
@@ -42,6 +45,24 @@ class _MainViewState extends State<MainView> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     Connection.toPrefs(prefs, homeAssistantUrlsKey, _Connections);
     prefs.setString(selectedHomeAssistantIndex, _selection.toString());
+    prefs.setString(showOnLockscreen, _showOnLockscreen.toString());
+  }
+
+  void _setLockscreenDisplay(bool value) {
+    if (value) {
+      FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SHOW_WHEN_LOCKED)
+          .ignore();
+    } else {
+      FlutterWindowManager.clearFlags(
+              FlutterWindowManager.FLAG_SHOW_WHEN_LOCKED)
+          .ignore();
+    }
+
+    setState(() {
+      _showOnLockscreen = value;
+    });
+
+    _save();
   }
 
   void _addConnection([String? name, String? url, String? token]) {
@@ -232,6 +253,10 @@ class _MainViewState extends State<MainView> {
             trailing: const Icon(Icons.add),
             onTap: _addConnection,
           ),
+          SwitchListTile(
+              title: const Text('Show on Lockscreen'),
+              value: _showOnLockscreen,
+              onChanged: (value) => _setLockscreenDisplay(value)),
           SwitchListTile(
             title: const Text('Edit mode'),
             value: _editMode,

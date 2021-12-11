@@ -29,7 +29,6 @@ class _EditEntityState extends State<EditEntityView> {
 
   @override
   Widget build(BuildContext context) {
-    print(_entity!.serviceDomain);
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),

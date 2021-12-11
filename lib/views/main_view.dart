@@ -136,14 +136,18 @@ class _MainViewState extends State<MainView> {
     _save();
   }
 
-  void _serviceCall(Entity entity, String service) async {
+  void _serviceCall(Entity entity, String service,
+      [Map<String, dynamic>? additionalBodyData]) async {
+    Map<String, dynamic> body = {'entity_id': entity.entityId};
+    body.addAll(additionalBodyData ?? {});
+
     await Client().post(
         Uri.parse(
             '${_Connections.elementAt(_selection).url}/api/services/$service'),
         headers: {
           'Authorization': 'Bearer ${_Connections.elementAt(_selection).token}'
         },
-        body: jsonEncode({'entity_id': entity.entityId}));
+        body: jsonEncode(body));
   }
 
   Widget _body() {

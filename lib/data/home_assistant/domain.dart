@@ -21,6 +21,7 @@ class _MediaPlayerFeature {
   IconData icon;
   bool inactive;
   String serviceCall;
+  Map<String, dynamic>? additionalBody;
 
   static final Map<String, _MediaPlayerFeature> configurations =
       <String, _MediaPlayerFeature>{
@@ -31,23 +32,26 @@ class _MediaPlayerFeature {
     'pause': _MediaPlayerFeature('pause', Icons.pause, 'media_pause'),
     'play': _MediaPlayerFeature('play', Icons.play_arrow, 'media_play'),
     'vol_up': _MediaPlayerFeature('vol_up', Icons.volume_up, 'volume_up'),
-    'vol_mute_on':
-        _MediaPlayerFeature('vol_mute_on', Icons.volume_mute, 'volume_mute'),
-    'vol_mute_off': _MediaPlayerFeature(
-        'vol_mute_off', Icons.volume_mute, 'volume_mute', true),
+    'vol_mute_on': _MediaPlayerFeature('vol_mute_on', Icons.volume_mute,
+        'volume_mute', {'is_volume_muted': true}),
+    'vol_mute_off': _MediaPlayerFeature('vol_mute_off', Icons.volume_mute,
+        'volume_mute', {'is_volume_muted': false}, true),
     'vol_down':
         _MediaPlayerFeature('vol_down', Icons.volume_down, 'volume_down'),
-    'shuffle_on':
-        _MediaPlayerFeature('shuffle_on', Icons.shuffle, 'shuffle_set'),
-    'shuffle_off':
-        _MediaPlayerFeature('shuffle_off', Icons.shuffle, 'shuffle_set', true),
-    'repeat_on': _MediaPlayerFeature('repeat_on', Icons.repeat, 'repeat_set'),
-    'repeat_off':
-        _MediaPlayerFeature('repeat_off', Icons.repeat, 'repeat_set', true),
+    'shuffle_on': _MediaPlayerFeature(
+        'shuffle_on', Icons.shuffle, 'shuffle_set', {'shuffle': true}),
+    'shuffle_off': _MediaPlayerFeature(
+        'shuffle_off', Icons.shuffle, 'shuffle_set', {'shuffle': false}, true),
+    'repeat_off': _MediaPlayerFeature(
+        'repeat_off', Icons.repeat, 'repeat_set', {'repeat': 'off'}, true),
+    'repeat_one': _MediaPlayerFeature(
+        'repeat_one', Icons.repeat_one, 'repeat_set', {'repeat': 'one'}),
+    'repeat_all': _MediaPlayerFeature(
+        'repeat_all', Icons.repeat, 'repeat_set', {'repeat': 'all'}),
   };
 
   _MediaPlayerFeature(this.id, this.icon, this.serviceCall,
-      [this.inactive = false]);
+      [this.additionalBody, this.inactive = false]);
 }
 
 class Domain {
@@ -89,8 +93,9 @@ class Domain {
           DomainFeature(id: 'vol_down', name: 'Volume down'),
           DomainFeature(id: 'shuffle_on', name: 'Shuffle on'),
           DomainFeature(id: 'shuffle_off', name: 'Shuffle off'),
-          DomainFeature(id: 'repeat_on', name: 'Repeat on'),
           DomainFeature(id: 'repeat_off', name: 'Repeat off'),
+          DomainFeature(id: 'repeat_one', name: 'Repeat one'),
+          DomainFeature(id: 'repeat_all', name: 'Repeat all'),
         ],
         widgetFactory: (BuildContext context, Entity entity,
                 Function serviceCall) =>
@@ -118,8 +123,12 @@ class Domain {
                                           ? Theme.of(context).disabledColor
                                           : Theme.of(context).iconTheme.color,
                                     ),
-                                    onPressed: () => serviceCall(entity,
-                                        'media_player/${_MediaPlayerFeature.configurations[feature.id]!.serviceCall}'),
+                                    onPressed: () => serviceCall(
+                                        entity,
+                                        'media_player/${_MediaPlayerFeature.configurations[feature.id]!.serviceCall}',
+                                        _MediaPlayerFeature
+                                            .configurations[feature.id]!
+                                            .additionalBody),
                                   ))
                               .toList(),
                         )),

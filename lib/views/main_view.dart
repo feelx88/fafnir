@@ -5,9 +5,9 @@ import 'package:fafnir/data/home_assistant/domain.dart';
 import 'package:fafnir/data/home_assistant/entity.dart';
 import 'package:fafnir/dialogs/add_connection_dialog.dart';
 import 'package:fafnir/dialogs/confirm_dialog.dart';
+import 'package:fafnir/generated/l10n.dart';
 import 'package:fafnir/views/select_entity_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,7 +23,7 @@ class MainView extends StatefulWidget {
 }
 
 class _MainViewState extends State<MainView> {
-  List<Connection> _Connections = List.empty();
+  List<Connection> _connections = List.empty();
   int _selection = 0;
   bool _editMode = false;
   bool _showOnLockscreen = false;
@@ -34,7 +34,7 @@ class _MainViewState extends State<MainView> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _Connections = Connection.fromPrefs(prefs, homeAssistantUrlsKey);
+      _connections = Connection.fromPrefs(prefs, homeAssistantUrlsKey);
       _selection =
           int.parse(prefs.getString(selectedHomeAssistantIndex) ?? '0');
       _showOnLockscreen = prefs.getString(showOnLockscreen) == 'true';
@@ -43,7 +43,7 @@ class _MainViewState extends State<MainView> {
 
   void _save() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    Connection.toPrefs(prefs, homeAssistantUrlsKey, _Connections);
+    Connection.toPrefs(prefs, homeAssistantUrlsKey, _connections);
     prefs.setString(selectedHomeAssistantIndex, _selection.toString());
     prefs.setString(showOnLockscreen, _showOnLockscreen.toString());
   }
@@ -68,7 +68,7 @@ class _MainViewState extends State<MainView> {
   void _addConnection([String? name, String? url, String? token]) {
     AddConnectionDialog.create(context, name, url, token, (name, url, token) {
       setState(() {
-        _Connections.add(Connection(name: name!, url: url!, token: token!));
+        _connections.add(Connection(name: name!, url: url!, token: token!));
       });
 
       _save();
@@ -80,12 +80,12 @@ class _MainViewState extends State<MainView> {
   void _deleteConnection(Connection connection) {
     ConfirmDialog.create(
       context,
-      'Delete connection',
-      'Really delete connection ${connection.name}?',
-      'Delete',
+      S.of(context).deleteConnection,
+      S.of(context).reallyDeleteConnectionConnectionname(connection.name),
+      S.of(context).delete,
       () {
         setState(() {
-          _Connections.removeWhere(
+          _connections.removeWhere(
               (connectionToCheck) => connectionToCheck.name == connection.name);
           Navigator.pop(context);
         });
@@ -99,7 +99,7 @@ class _MainViewState extends State<MainView> {
   void _addEntity() async {
     var result = await Navigator.of(context).pushNamed('/select_entity',
             arguments:
-                SelectEntityViewArguments(_Connections.elementAt(_selection)))
+                SelectEntityViewArguments(_connections.elementAt(_selection)))
         as Entity?;
 
     if (result == null) {
@@ -107,19 +107,24 @@ class _MainViewState extends State<MainView> {
     }
 
     setState(() {
-      _Connections.elementAt(_selection).entities.add(result);
+      _connections.elementAt(_selection).entities.add(result);
     });
 
-    _editEntity(_Connections.elementAt(_selection).entities.length - 1, result);
+    _editEntity(_connections.elementAt(_selection).entities.length - 1, result);
 
     _save();
   }
 
   Future<bool?> _removeEntity(Entity entity) {
-    return ConfirmDialog.create(context, 'Remove entity',
-        'Do you want to remove entity ${entity.friendlyName}?', 'Remove', () {
+    return ConfirmDialog.create(
+        context,
+        S.of(context).removeEntity,
+        S
+            .of(context)
+            .doYouWantToRemoveEntityEntityfriendlyname(entity.friendlyName),
+        S.of(context).remove, () {
       setState(() {
-        _Connections.elementAt(_selection).entities.remove(entity);
+        _connections.elementAt(_selection).entities.remove(entity);
         Navigator.pop(context);
       });
 
@@ -127,15 +132,15 @@ class _MainViewState extends State<MainView> {
     },
         positiveButtonColor: Theme.of(context).errorColor,
         cancelCallback: () => setState(() {
-              _Connections = _Connections;
+              _connections = _connections;
             }));
   }
 
   void _reorderEntities(oldIndex, newIndex) {
     setState(() {
-      _Connections.elementAt(_selection).entities.insert(
+      _connections.elementAt(_selection).entities.insert(
           newIndex - (oldIndex < newIndex ? 1 : 0),
-          _Connections.elementAt(_selection).entities.removeAt(oldIndex));
+          _connections.elementAt(_selection).entities.removeAt(oldIndex));
     });
 
     _save();
@@ -151,7 +156,7 @@ class _MainViewState extends State<MainView> {
     }
 
     setState(() {
-      _Connections.elementAt(_selection).entities[index] = entity;
+      _connections.elementAt(_selection).entities[index] = entity;
     });
 
     _save();
@@ -164,24 +169,24 @@ class _MainViewState extends State<MainView> {
 
     await Client().post(
         Uri.parse(
-            '${_Connections.elementAt(_selection).url}/api/services/$service'),
+            '${_connections.elementAt(_selection).url}/api/services/$service'),
         headers: {
-          'Authorization': 'Bearer ${_Connections.elementAt(_selection).token}'
+          'Authorization': 'Bearer ${_connections.elementAt(_selection).token}'
         },
         body: jsonEncode(body));
   }
 
   Widget _body() {
     // Empty text
-    if (_Connections.isEmpty ||
-        _Connections.elementAt(_selection).entities.isEmpty) {
+    if (_connections.isEmpty ||
+        _connections.elementAt(_selection).entities.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _Connections.isEmpty
-                ? const Text('No connections configured')
-                : const Text('No entities configured')
+            _connections.isEmpty
+                ? Text(S.of(context).noConnectionsConfigured)
+                : Text(S.of(context).noEntitiesConfigured)
           ],
         ),
       );
@@ -189,7 +194,7 @@ class _MainViewState extends State<MainView> {
 
     // Prepare entity map
     Map<int, Entity> map =
-        _Connections.elementAt(_selection).entities.toList().asMap();
+        _connections.elementAt(_selection).entities.toList().asMap();
 
     // Show edit mode list tiles
     if (_editMode) {
@@ -239,33 +244,33 @@ class _MainViewState extends State<MainView> {
         title: Text(widget.title),
       ),
       drawer: Drawer(
-        key: const Key('drawer'),
         child: ListView(children: [
           DrawerHeader(
-            child:
-                Text('Settings', style: Theme.of(context).textTheme.headline4),
+            child: Text(S.of(context).settings,
+                style: Theme.of(context).textTheme.headline4),
             decoration: const BoxDecoration(
               color: Colors.blueGrey,
             ),
           ),
           ListTile(
-            title: const Text('Add Home Assistant connection'),
+            title: Text(S.of(context).addHomeAssistantConnection),
             trailing: const Icon(Icons.add),
             onTap: _addConnection,
           ),
           SwitchListTile(
-              title: const Text('Show on Lockscreen'),
+              title: Text(S.of(context).showOnLockscreen),
               value: _showOnLockscreen,
               onChanged: (value) => _setLockscreenDisplay(value)),
           SwitchListTile(
-            title: const Text('Edit mode'),
+            title: Text(S.of(context).editMode),
             value: _editMode,
             onChanged: (value) => setState(() {
               _editMode = value;
             }),
           ),
           const Divider(),
-          ...(_Connections.asMap()
+          ...(_connections
+              .asMap()
               .map((index, connection) => MapEntry(
                   index,
                   CheckboxListTile(
@@ -296,7 +301,7 @@ class _MainViewState extends State<MainView> {
         ]),
       ),
       body: _body(),
-      floatingActionButton: _Connections.isNotEmpty && _editMode
+      floatingActionButton: _connections.isNotEmpty && _editMode
           ? FloatingActionButton(
               onPressed: () {
                 if (_editMode) {

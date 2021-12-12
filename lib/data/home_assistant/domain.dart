@@ -1,6 +1,7 @@
 library home_assistant;
 
 import 'package:fafnir/data/home_assistant/entity.dart';
+import 'package:fafnir/generated/l10n.dart';
 import 'package:flutter/material.dart';
 
 class DomainFeature {
@@ -58,7 +59,7 @@ class Domain {
   static final Map<String, Domain> configurations = <String, Domain>{
     'light': Domain(
         id: 'light',
-        name: 'Light',
+        name: S.current.light,
         features: [],
         widgetFactory:
             (BuildContext context, Entity entity, Function serviceCall) =>
@@ -69,7 +70,7 @@ class Domain {
                 )),
     'switch': Domain(
         id: 'switch',
-        name: 'Switch',
+        name: S.current.switchDomain,
         features: [],
         widgetFactory:
             (BuildContext context, Entity entity, Function serviceCall) =>
@@ -80,22 +81,22 @@ class Domain {
                 )),
     'media_player': Domain(
         id: 'media_player',
-        name: 'Media Player',
+        name: S.current.mediaPlayer,
         features: [
-          DomainFeature(id: 'previous', name: 'Previous'),
-          DomainFeature(id: 'next', name: 'Next'),
-          DomainFeature(id: 'stop', name: 'Stop'),
-          DomainFeature(id: 'pause', name: 'Pause'),
-          DomainFeature(id: 'play', name: 'Play'),
-          DomainFeature(id: 'vol_up', name: 'Volume up'),
-          DomainFeature(id: 'vol_mute_on', name: 'Volume mute on'),
-          DomainFeature(id: 'vol_mute_off', name: 'Volume mute off'),
-          DomainFeature(id: 'vol_down', name: 'Volume down'),
-          DomainFeature(id: 'shuffle_on', name: 'Shuffle on'),
-          DomainFeature(id: 'shuffle_off', name: 'Shuffle off'),
-          DomainFeature(id: 'repeat_off', name: 'Repeat off'),
-          DomainFeature(id: 'repeat_one', name: 'Repeat one'),
-          DomainFeature(id: 'repeat_all', name: 'Repeat all'),
+          DomainFeature(id: 'previous', name: S.current.previous),
+          DomainFeature(id: 'next', name: S.current.next),
+          DomainFeature(id: 'stop', name: S.current.stop),
+          DomainFeature(id: 'pause', name: S.current.pause),
+          DomainFeature(id: 'play', name: S.current.play),
+          DomainFeature(id: 'vol_up', name: S.current.volumeUp),
+          DomainFeature(id: 'vol_mute_on', name: S.current.volumeMuteOn),
+          DomainFeature(id: 'vol_mute_off', name: S.current.volumeMuteOff),
+          DomainFeature(id: 'vol_down', name: S.current.volumeDown),
+          DomainFeature(id: 'shuffle_on', name: S.current.shuffleOn),
+          DomainFeature(id: 'shuffle_off', name: S.current.shuffleOff),
+          DomainFeature(id: 'repeat_off', name: S.current.repeatOff),
+          DomainFeature(id: 'repeat_one', name: S.current.repeatOne),
+          DomainFeature(id: 'repeat_all', name: S.current.repeatAll),
         ],
         widgetFactory: (BuildContext context, Entity entity,
                 Function serviceCall) =>
@@ -136,7 +137,7 @@ class Domain {
                 ))),
     'scene': Domain(
         id: 'scene',
-        name: 'Scene',
+        name: S.current.scene,
         features: [],
         widgetFactory:
             (BuildContext context, Entity entity, Function serviceCall) =>
@@ -148,7 +149,7 @@ class Domain {
                 )),
     'input_boolean': Domain(
         id: 'input_boolean',
-        name: 'Boolean input',
+        name: S.current.booleanInput,
         features: [],
         widgetFactory:
             (BuildContext context, Entity entity, Function serviceCall) =>

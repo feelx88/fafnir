@@ -1,5 +1,6 @@
 import 'package:fafnir/data/home_assistant/domain.dart';
 import 'package:fafnir/data/home_assistant/entity.dart';
+import 'package:fafnir/generated/l10n.dart';
 import 'package:flutter/material.dart';
 
 class EditEntityView extends StatefulWidget {
@@ -41,10 +42,11 @@ class _EditEntityState extends State<EditEntityView> {
                 initialValue: _entity!.friendlyName,
                 onChanged: (value) => _entity!.friendlyName = value,
                 decoration:
-                    const InputDecoration(label: Text('Friendly name'))),
+                    InputDecoration(label: Text(S.of(context).friendlyName))),
             TextFormField(
                 initialValue: _entity!.entityId,
-                decoration: const InputDecoration(label: Text('Entity id')),
+                decoration:
+                    InputDecoration(label: Text(S.of(context).entityId)),
                 readOnly: true),
             DropdownButtonFormField(
                 onChanged: (value) => setState(() {
@@ -58,7 +60,7 @@ class _EditEntityState extends State<EditEntityView> {
                             child: Text(value.name), value: value.id)))
                     .values
                     .toList(),
-                hint: const Text('Service type')),
+                hint: Text(S.of(context).domain)),
             ...(Domain.configurations[_entity!.serviceDomain]!.features.map(
                 (feature) => Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

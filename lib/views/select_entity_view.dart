@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:fafnir/data/home_assistant/connection.dart';
 import 'package:fafnir/data/home_assistant/entity.dart';
+import 'package:fafnir/generated/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
 
 class SelectEntityView extends StatefulWidget {
@@ -83,7 +83,7 @@ class _SelectEntityViewState extends State<SelectEntityView> {
                     maxLines: 1,
                     textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
-                        hintText: 'Filter',
+                        hintText: S.of(context).filter,
                         border: InputBorder.none,
                         suffixIcon: IconButton(
                             onPressed: () => setState(() {

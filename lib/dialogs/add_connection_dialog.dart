@@ -1,3 +1,4 @@
+import 'package:fafnir/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
@@ -7,20 +8,20 @@ class AddConnectionDialog {
     await showDialog(
         context: context,
         builder: (BuildContext context) => AlertDialog(
-              title: const Text('Enter Name for the new connection'),
+              title: Text(S.of(context).newConnection),
               content: Column(mainAxisSize: MainAxisSize.min, children: [
                 TextField(
-                  decoration: const InputDecoration(label: Text('Name')),
+                  decoration: InputDecoration(label: Text(S.of(context).name)),
                   controller: TextEditingController(text: name),
                   onChanged: (value) => name = value,
                 ),
                 TextField(
-                  decoration: const InputDecoration(label: Text('Url')),
+                  decoration: InputDecoration(label: Text(S.of(context).url)),
                   controller: TextEditingController(text: url),
                   onChanged: (value) => url = value,
                 ),
                 TextField(
-                  decoration: const InputDecoration(label: Text('Token')),
+                  decoration: InputDecoration(label: Text(S.of(context).token)),
                   controller: TextEditingController(text: token),
                   onChanged: (value) => token = value,
                 ),
@@ -30,23 +31,23 @@ class AddConnectionDialog {
                     onPressed: () async {
                       token = await FlutterBarcodeScanner.scanBarcode(
                           '#${Colors.red.value.toRadixString(16)}',
-                          'Cancel',
+                          S.of(context).cancel,
                           true,
                           ScanMode.QR);
                       Navigator.pop(context);
                       AddConnectionDialog.create(
                           context, name, url, token, saveCallback);
                     },
-                    child: const Text('Scan QR Code')),
+                    child: Text(S.of(context).scanQrCode)),
                 TextButton(
-                  child: const Text('Cancel'),
+                  child: Text(S.of(context).cancel),
                   onPressed: () {
                     name = null;
                     Navigator.pop(context);
                   },
                 ),
                 ElevatedButton(
-                  child: const Text('Save'),
+                  child: Text(S.of(context).save),
                   onPressed: () => saveCallback(name, url, token),
                 )
               ],

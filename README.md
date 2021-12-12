@@ -1,4 +1,4 @@
-# FAFNIR (Fire And Forget Non Interrupting Remote) for Home Assistant
+# FAFNIR ("*F*ire *A*nd *F*orget"-operating, *N*imbly *I*mplemented *R*emote) for Home Assistant
 
 A small App to control home assistant entities without waiting to load the lovelace interface or
 the entities' state.
